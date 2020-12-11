@@ -37,7 +37,6 @@ public class Reminder {
 
         final Runnable reminder = new Runnable() {
             public void run() {
-                String msgId = channel.getLatestMessageId();
                 channel.sendMessage(hydrate).queue();
             }
         };

@@ -7,15 +7,27 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.managers.AudioManager;
+import net.dv8tion.jda.api.requests.RestAction;
+import org.apache.maven.lifecycle.Schedule;
 
 import java.awt.*;
 import java.io.*;
 import java.time.OffsetTime;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+
+import static java.util.concurrent.TimeUnit.MINUTES;
 
 public class MyListener extends ListenerAdapter {
+
+    private final ScheduledExecutorService scheduler =
+            Executors.newScheduledThreadPool(1);
 
     @Override
     public void onGuildMessageReceived(GuildMessageReceivedEvent event) {
@@ -41,6 +53,9 @@ public class MyListener extends ListenerAdapter {
                 break;
             case "!addExpose":
                 addToExpose(event, content);
+                break;
+            case "!subscribe":
+                addSubscription(event, content);
                 break;
             case "!play":
                 // Used for playing music but currently on work.
@@ -118,11 +133,13 @@ public class MyListener extends ListenerAdapter {
         String value = "\u2022 greet\n"
                 +"\u2022 play (Under Construction)\n"
                 +"\u2022 addExpose\n"
-                +"\u2022 expose\n";
+                +"\u2022 expose\n"
+                +"\u2022 subscribe";
 
         String autoMsgList =
                 "\u2022 Master's bedtime\n" +
-                "\u2022 Hydrate yourselves";
+                "\u2022 Remind to drink (subscribe) \n" +
+                "\u2022 Welcome Back\n";
 
         EmbedBuilder embed = new EmbedBuilder();
         embed.setTitle("Feature List");
@@ -179,8 +196,6 @@ public class MyListener extends ListenerAdapter {
             return;
         }
 
-
-
         String text = "";
         for(int i = 2; i < content.length; i++) {
             text += (content[i] + " ");
@@ -225,5 +240,40 @@ public class MyListener extends ListenerAdapter {
         } catch(IOException e) {
             System.out.println("File fail to load");
         }
+    }
+
+    public void addSubscription(GuildMessageReceivedEvent event, String[] content) {
+        MessageChannel channel = event.getChannel();
+
+        if(content.length < 2) {
+            channel.sendMessage("Please specify the subscription service you want").queue();
+            return;
+        }
+
+        try(BufferedWriter writer = new BufferedWriter(new FileWriter("res/FileData/Subscribers.csv", true))) {
+            String memberId = event.getMember().getId();
+            String tuple = memberId + ", " + content[1] + '\n';
+            writer.write(tuple);
+            drinkHandler(event, memberId);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void drinkHandler(GuildMessageReceivedEvent event, String memberId) {
+        User user = event.getJDA().getUserById(memberId);
+        String message = "Don't forget to hydrate yourselves";
+
+        final Runnable reminder = new Runnable() {
+            public void run() {
+                user.openPrivateChannel()
+                        .flatMap(channel -> channel.sendMessage(message))
+                        .queue();
+            }
+        };
+
+        final ScheduledFuture<?> drink =
+                scheduler.scheduleWithFixedDelay(reminder,
+                        15, 15, MINUTES);
     }
 }
