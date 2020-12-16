@@ -16,6 +16,7 @@ import org.apache.maven.lifecycle.Schedule;
 
 import java.awt.*;
 import java.io.*;
+import java.nio.Buffer;
 import java.time.OffsetTime;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -42,6 +43,9 @@ public class MyListener extends ListenerAdapter {
 
         // Checks if first string inputted is equivalent to any of the command below.
         switch(content[0]) {
+            case "!updates":
+                showUpdates(event);
+                break;
             case "!greet":
                 greetMembers(event);
                 break;
@@ -56,6 +60,12 @@ public class MyListener extends ListenerAdapter {
                 break;
             case "!subscribe":
                 addSubscription(event, content);
+                break;
+            case "!unsubscribe":
+                removeSubscription(event, content[1]);
+                break;
+            case "!affection":
+                showAffection(event);
                 break;
             case "!play":
                 // Used for playing music but currently on work.
@@ -100,7 +110,10 @@ public class MyListener extends ListenerAdapter {
                             }
                         });
                 break;
+        }
 
+        if(event.getMessage().getMentionedMembers().contains(event.getGuild().getMemberById("326762999882842113"))) {
+            event.getChannel().sendMessage("I've told you not to ping master when he's busy. Do you want to get ban?").queue();
         }
     }
 
@@ -134,7 +147,8 @@ public class MyListener extends ListenerAdapter {
                 +"\u2022 play (Under Construction)\n"
                 +"\u2022 addExpose\n"
                 +"\u2022 expose\n"
-                +"\u2022 subscribe";
+                +"\u2022 subscribe\n"
+                +"\u2022 affection\n";
 
         String autoMsgList =
                 "\u2022 Master's bedtime\n" +
@@ -250,6 +264,19 @@ public class MyListener extends ListenerAdapter {
             return;
         }
 
+        try(BufferedReader reader = new BufferedReader(new FileReader("res/FileData/Subscribers.csv"))) {
+            String line;
+            while((line = reader.readLine()) != null) {
+                String[] tuple = line.split(",");
+                if(tuple[0].equals(event.getMember().getId()) && tuple[1].equals(content[1])) {
+                    event.getChannel().sendMessage("You are already subscribed to this subscription").queue();
+                    return;
+                }
+            }
+        } catch (IOException e) {
+
+        }
+
         // Records user's subscription by their Id and subscription type
         try(BufferedWriter writer = new BufferedWriter(new FileWriter("res/FileData/Subscribers.csv", true))) {
             String memberId = event.getMember().getId();
@@ -258,6 +285,30 @@ public class MyListener extends ListenerAdapter {
             drinkHandler(event, memberId);
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    public void removeSubscription(GuildMessageReceivedEvent event, String subscription) {
+        String text = "";
+
+        try(BufferedReader reader = new BufferedReader(new FileReader("res/FileData/Subscribers.csv"))) {
+            String line;
+            while((line = reader.readLine()) != null) {
+                String[] tuples = line.split(",");
+                if(tuples[0].equals(event.getMember().getId())
+                        && tuples[1].equals(subscription)) {
+                    continue;
+                }
+                text += tuples + "\n";
+            }
+        } catch (IOException e) {
+
+        }
+
+        try(BufferedWriter writer = new BufferedWriter(new FileWriter("res/FileData/Subscribers.csv"))) {
+            writer.write(text);
+        } catch (IOException e) {
+
         }
     }
 
@@ -276,5 +327,32 @@ public class MyListener extends ListenerAdapter {
         final ScheduledFuture<?> drink =
                 scheduler.scheduleWithFixedDelay(reminder,
                         0, 15, MINUTES);
+    }
+
+    private void showUpdates(GuildMessageReceivedEvent event) {
+        String value = "\u2022 Added a new subscribe feature\n" +
+                       "Removed automatic guild message drink and replaced by subscribe feature\n" +
+                       "users can now receive automatic private message to drink";
+
+        EmbedBuilder embed = new EmbedBuilder();
+        embed.setTitle("Updates");
+        embed.setColor(Color.cyan);
+        embed.addField("Commands for everyone", value, false);
+        event.getChannel().sendMessage(embed.build()).queue();
+    }
+
+    private void showAffection(GuildMessageReceivedEvent event) {
+        int rng = (int) (Math.random() * 100);
+
+        if(event.getAuthor().getId().equals("326762999882842113")) {
+            event.getChannel().sendMessage("You don't have to ask master my affection for you is always 100%").queue();
+            return;
+        }
+
+        if(rng < 50) {
+            event.getChannel().sendMessage("Affection: " + rng + "%. Maybe a worm will love you more?").queue();
+        } else {
+            event.getChannel().sendMessage("Affection: " + rng + "%. Here's some love for you! :kissing_heart:").queue();
+        }
     }
 }

@@ -16,8 +16,12 @@ public class UserPresenceUpdate extends ListenerAdapter {
                     event.getMember().hasAccess(event.getJDA().getTextChannelById("745634050672296040"))) {
                 Main.counter++;
                 if(Main.counter == 2) {
-                    channel.sendMessage("Welcome Back to the server " +
-                            event.getMember().getUser().getName()).queue();
+                    if(event.getUser().getId().equals("95492173562130432")) {
+                        channel.sendMessage("Oh look the idiot is back").queue();
+                    } else {
+                        channel.sendMessage("Welcome Back " +
+                                event.getMember().getUser().getName()).queue();
+                    }
                     Main.counter = 0;
                 }
             }

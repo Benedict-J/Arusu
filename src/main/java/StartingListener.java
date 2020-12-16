@@ -23,8 +23,10 @@ public class StartingListener extends ListenerAdapter {
         MessageChannel channel = event.getJDA().getTextChannelById("745634050672296040");
 //        channel.sendMessage("I'm online master").queue();
 
-        new Reminder().remindSleep(channel);
+//        new Reminder().remindSleep(channel);
         subscriptionsHandler(event);
+
+//        channel.sendMessage("A new feature has arrived! :partying_face:").queue();
     }
 
     private void subscriptionsHandler(ReadyEvent event) {
