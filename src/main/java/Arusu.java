@@ -1,9 +1,9 @@
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
+import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
 import javax.security.auth.login.LoginException;
 import java.io.BufferedReader;
@@ -11,7 +11,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class Main {
+public class Arusu {
     public static int counter = 0;
     public static ArrayList<String[]> id;
     public static String botToken;
@@ -22,21 +22,19 @@ public class Main {
     public static String friendWId;
     public static String botId;
 
-
     public static void main(String[] args) throws LoginException {
-        new Main().readId();
+        new Arusu().readId();
 
         JDA api = JDABuilder
                 .createDefault(botToken)
+                .enableCache(CacheFlag.ACTIVITY)
                 .enableIntents(GatewayIntent.GUILD_PRESENCES)
                 .setMemberCachePolicy(MemberCachePolicy.ONLINE)
                 .build();
 
-        api.getPresence().setPresence(OnlineStatus.ONLINE, Activity.watching("Nerds"));
+        api.getPresence().setActivity(Activity.listening("discord events"));
 
-        api.addEventListener(new StartingListener(),
-                new MyListener(),
-                new UserPresenceUpdate());
+        api.addEventListener(new StartingListener(), new EventListener());
     }
 
     // Hides important ids of guild and users and bot token (For personal use)
