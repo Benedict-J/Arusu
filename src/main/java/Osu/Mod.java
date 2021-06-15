@@ -1,3 +1,5 @@
+package Osu;
+
 public enum Mod {
     None(0),
     NoFail(1),

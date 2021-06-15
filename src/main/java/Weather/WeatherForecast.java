@@ -1,19 +1,22 @@
+package Weather;
+
 import kong.unirest.HttpResponse;
 import kong.unirest.Unirest;
 import kong.unirest.json.JSONObject;
 import net.dv8tion.jda.api.EmbedBuilder;
 
 import java.awt.*;
-import java.util.Locale;
 
-public class WeatherForecast extends API {
+public class WeatherForecast {
+    private String apiKey;
+
     public WeatherForecast() {
-        super("openweathermap");
+        apiKey = System.getenv("OSU_API_KEY");
     }
 
     public EmbedBuilder getCurrentWeatherEmbed(String city) {
         HttpResponse<String> currentWeatherResponse = Unirest.get("https://api.openweathermap.org/data/2.5/weather?" +
-                                                                  "q=" + city + "&units=metric&appid=" + super.getApiKey())
+                                                                  "q=" + city + "&units=metric&appid=" + apiKey)
                                                              .asString();
 
         JSONObject currentWeatherData = new JSONObject(currentWeatherResponse.getBody());

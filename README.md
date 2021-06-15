@@ -13,7 +13,7 @@ This is a discord bot that I made as a small personal project.
 ## Other requirements
 There is a need to get the api key from each of the sources below to use their feature.
 
-- Osu API v1
+- Osu.Osu API v1
   - About: https://osu.ppy.sh/home
   - Api: https://github.com/ppy/osu-api
 - OpenWeatherMap

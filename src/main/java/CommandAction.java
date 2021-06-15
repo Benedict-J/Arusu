@@ -1,12 +1,27 @@
+import Music.GuildMusicManager;
+import Osu.Osu;
+import Weather.WeatherForecast;
+import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
+import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
+import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
+import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
+import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import kong.unirest.HttpResponse;
+import kong.unirest.Unirest;
+import kong.unirest.json.JSONObject;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
+import net.dv8tion.jda.api.managers.AudioManager;
+
 import java.awt.*;
 import java.io.*;
 import java.time.OffsetTime;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -15,8 +30,17 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 
 public class CommandAction {
     private String shopMsgId;
+
+    private final AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
+    private final Map<Long, GuildMusicManager> musicManagers = new HashMap<>();
+
     private final ScheduledExecutorService scheduler =
             Executors.newScheduledThreadPool(1);
+
+    public CommandAction() {
+        AudioSourceManagers.registerRemoteSources(playerManager);
+        AudioSourceManagers.registerLocalSource(playerManager);
+    }
 
 
     public void addReactionToPointShop(GuildMessageReceivedEvent event, EmbedBuilder shopEmbed) {
@@ -344,44 +368,44 @@ public class CommandAction {
     }
 
     public void showAffection(GuildMessageReceivedEvent event) {
-        int rng = (int) (Math.random() * 100);
-
-        if(event.getAuthor().getId().equals(Arusu.botOwnerId)) {
-            event.getChannel().sendMessage("You don't have to ask master my affection for you is always 100%").queue();
-            return;
-        } else if(event.getAuthor().getId().equals(Arusu.guildOwnerId)) {
-            event.getChannel().sendMessage("Master's boss obviously gets 1000% of the love.").queue();
-        }
-
-        if(rng < 50) {
-            event.getChannel()
-                    .sendMessage("Affection: " + rng + "%. Maybe a worm will love you more?")
-                    .queue();
-        } else {
-            event.getChannel()
-                    .sendMessage("Affection: " + rng + "%. Here's some love for you! :kissing_heart:")
-                    .queue();
-        }
+//        int rng = (int) (Math.random() * 100);
+//
+//        if(event.getAuthor().getId().equals(Arusu.botOwnerId)) {
+//            event.getChannel().sendMessage("You don't have to ask master my affection for you is always 100%").queue();
+//            return;
+//        } else if(event.getAuthor().getId().equals(Arusu.guildOwnerId)) {
+//            event.getChannel().sendMessage("Master's boss obviously gets 1000% of the love.").queue();
+//        }
+//
+//        if(rng < 50) {
+//            event.getChannel()
+//                    .sendMessage("Affection: " + rng + "%. Maybe a worm will love you more?")
+//                    .queue();
+//        } else {
+//            event.getChannel()
+//                    .sendMessage("Affection: " + rng + "%. Here's some love for you! :kissing_heart:")
+//                    .queue();
+//        }
     }
 
     public void replyForMentioned(GuildMessageReceivedEvent event) {
-        // Sends message when bot owner gets mentioned by a member's message
-        List<Member> mentionedMembers = event.getMessage().getMentionedMembers();
-        Member botOwner = event.getGuild().getMemberById(Arusu.botOwnerId);
-        Member bot = event.getGuild().getMemberById("780800869875974185");
-
-        if(mentionedMembers.contains(botOwner)) {
-            if (event.getMember().equals(botOwner)) {
-                event.getChannel()
-                        .sendMessage("What are you trying to do master? :KannaWhat:")
-                        .queue();
-            } else if (!botOwner.getOnlineStatus().equals(OnlineStatus.ONLINE)
-                    || !botOwner.getActivities().equals(Activity.ActivityType.DEFAULT)) {
-                event.getChannel()
-                        .sendMessage("I've told you not to ping master when he's busy. Do you want to get ban?")
-                        .queue();
-            }
-        }
+//        // Sends message when bot owner gets mentioned by a member's message
+//        List<Member> mentionedMembers = event.getMessage().getMentionedMembers();
+//        Member botOwner = event.getGuild().getMemberById(Arusu.botOwnerId);
+//        Member bot = event.getGuild().getMemberById("780800869875974185");
+//
+//        if(mentionedMembers.contains(botOwner)) {
+//            if (event.getMember().equals(botOwner)) {
+//                event.getChannel()
+//                        .sendMessage("What are you trying to do master? :KannaWhat:")
+//                        .queue();
+//            } else if (!botOwner.getOnlineStatus().equals(OnlineStatus.ONLINE)
+//                    || !botOwner.getActivities().equals(Activity.ActivityType.DEFAULT)) {
+//                event.getChannel()
+//                        .sendMessage("I've told you not to ping master when he's busy. Do you want to get ban?")
+//                        .queue();
+//            }
+//        }
     }
 
     public void giveOsuProfileData(GuildMessageReceivedEvent event, Osu osu) {
@@ -402,7 +426,7 @@ public class CommandAction {
 
         EmbedBuilder osuProfile = new EmbedBuilder();
 
-        osuProfile.setTitle("Osu Profile");
+        osuProfile.setTitle("Osu.Osu Profile");
         osuProfile.setThumbnail("http://s.ppy.sh/a/" + userID);
         osuProfile.addField(content[1], result[0],true);
         osuProfile.addField("", result[1], true);
@@ -543,6 +567,111 @@ public class CommandAction {
             event.getChannel().sendMessage(invalid.build()).queue();
         } else {
             event.getChannel().sendMessage(currentWeatherEmbed.build()).queue();
+        }
+    }
+
+    private synchronized GuildMusicManager getGuildAudioPlayer(Guild guild) {
+        long guildId = Long.parseLong(guild.getId());
+        GuildMusicManager musicManager = musicManagers.get(guildId);
+
+        if (musicManager == null) {
+            musicManager = new GuildMusicManager(playerManager);
+            musicManagers.put(guildId, musicManager);
+        }
+
+        guild.getAudioManager().setSendingHandler(musicManager.getSendHandler());
+
+        return musicManager;
+    }
+
+    public void playMusic(GuildMessageReceivedEvent event) {
+        String[] content = event.getMessage().getContentRaw().split(" ");
+
+        if(content.length < 2) {
+            event.getChannel().sendMessage("Invalid").queue();
+            return;
+        }
+
+        String videoName = event.getMessage().getContentRaw().replaceFirst("!play","");
+
+        event.getMessage().delete().queue();
+
+        String trackUrl;
+        TextChannel channel = event.getChannel();
+
+        GuildMusicManager musicManager = getGuildAudioPlayer(event.getChannel().getGuild());
+
+        System.out.println(videoName);
+
+        HttpResponse<String> response = Unirest.get("https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=1" +
+                                                    "&q=" + videoName +
+                                                    "&key=AIzaSyBJBYVVg0s3coI-xCOFBDZXA3hTCKGbOkw")
+                                                .header("Content-type","application/json")
+                                                .asString();
+
+        JSONObject videoData = new JSONObject(response.getBody());
+
+        System.out.println(videoData);
+
+        String id = videoData.getJSONArray("items").getJSONObject(0).getJSONObject("id").getString("videoId");
+
+        trackUrl = "https://www.youtube.com/watch?v=" + id;
+
+        System.out.println(id);
+
+
+        playerManager.loadItemOrdered(musicManager, trackUrl, new AudioLoadResultHandler() {
+            @Override
+            public void trackLoaded(AudioTrack track) {
+//                channel.sendMessage("Adding to queue " + track.getInfo().title).queue();
+
+                play(channel.getGuild(), musicManager, track);
+            }
+
+            @Override
+            public void playlistLoaded(AudioPlaylist playlist) {
+                AudioTrack firstTrack = playlist.getSelectedTrack();
+
+                if (firstTrack == null) {
+                    firstTrack = playlist.getTracks().get(0);
+                }
+
+//                channel.sendMessage("Adding to queue " + firstTrack.getInfo().title + " (first track of playlist " + playlist.getName() + ")").queue();
+
+                play(channel.getGuild(), musicManager, firstTrack);
+            }
+
+            @Override
+            public void noMatches() {
+                channel.sendMessage("Nothing found by " + trackUrl).queue();
+            }
+
+            @Override
+            public void loadFailed(FriendlyException exception) {
+                channel.sendMessage("Could not play: " + exception.getMessage()).queue();
+            }
+        });
+    }
+
+    private void play(Guild guild, GuildMusicManager musicManager, AudioTrack track) {
+        connectToFirstVoiceChannel(guild.getAudioManager());
+
+        musicManager.scheduler.queue(track);
+    }
+
+    public void skipTrack(TextChannel channel) {
+        GuildMusicManager musicManager = getGuildAudioPlayer(channel.getGuild());
+        musicManager.scheduler.nextTrack();
+
+        channel.sendMessage("Skipped to next track.").queue();
+    }
+
+    private static void connectToFirstVoiceChannel(AudioManager audioManager) {
+        if (!audioManager.isConnected() && !audioManager.isAttemptingToConnect()) {
+            for (VoiceChannel voiceChannel : audioManager.getGuild().getVoiceChannels()) {
+                audioManager.openAudioConnection(voiceChannel);
+                break;
+            }
         }
     }
 }

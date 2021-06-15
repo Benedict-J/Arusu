@@ -1,3 +1,5 @@
+package Osu;
+
 import kong.unirest.HttpResponse;
 import kong.unirest.Unirest;
 import kong.unirest.json.JSONArray;
@@ -5,10 +7,6 @@ import kong.unirest.json.JSONException;
 import kong.unirest.json.JSONObject;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.user.UserActivityStartEvent;
-
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -21,23 +19,7 @@ public class Osu {
     private String listenToUser;
 
     public Osu() {
-        retrieveApiKey("OsuKey");
-    }
-
-    private void retrieveApiKey(String key) {
-        try(BufferedReader bufferedReader = new BufferedReader(new FileReader("classifiedInfo.csv"))) {
-            String line;
-
-            while((line = bufferedReader.readLine()) != null) {
-                String[] data = line.split(",");
-
-                if(data[0].equals(key)) {
-                    apiKey = data[1];
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        apiKey = System.getenv("OSU_API_KEY");
     }
 
     public String[] retrieveProfileData(String userName) throws JSONException {
@@ -113,8 +95,6 @@ public class Osu {
 
         String mods = "";
 
-        System.out.println("Sup");
-
         // Get all mods used by the player.
         while(enabledMod != 0) {
             System.out.println(enabledMod);
@@ -135,8 +115,6 @@ public class Osu {
                 mods += (", ");
             }
         }
-
-        System.out.println("HEELLO");
 
         if(mods.equals("")) {
             mods = "None";
@@ -209,13 +187,9 @@ public class Osu {
         recentGame.addField("",scoreMessage,true);
 
 
-        event.getJDA().getGuildById(Arusu.guildId)
-                      .getTextChannelById(Arusu.textChannelId)
-                      .sendMessage(recentGame.build()).queue();
+        event.getGuild().getDefaultChannel().sendMessage(recentGame.build()).queue();
 
-        event.getJDA().getGuildById(Arusu.guildId)
-                      .getTextChannelById(Arusu.textChannelId)
-                      .sendMessage(ppMessage).queue();
+        event.getGuild().getDefaultChannel().sendMessage(ppMessage).queue();
     }
 
     public String retrieveTopPlaysData(String userName) throws JSONException {

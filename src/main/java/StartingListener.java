@@ -21,7 +21,7 @@ public class StartingListener extends ListenerAdapter {
     @Override
     public void onReady(@NotNull ReadyEvent event) {
         MessageChannel channel = event.getJDA().getTextChannelById("745634050672296040");
-//        channel.sendMessage("New update?").queue();
+        channel.sendMessage("```New update:\n-Added !play and !skip command for music. (unstable feature)\n-Usage: !play [song name]\n-Example 1: !play butter\n-Example 2: !play bts butter```").queue();
         subscriptionsHandler(event);
     }
 
