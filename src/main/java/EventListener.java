@@ -17,6 +17,7 @@ public class EventListener extends ListenerAdapter {
 
     private final Osu osu = new Osu();
 
+
     public EventListener() {
 //        shopEmbed = new EmbedBuilder();
 //        shopEmbed.setTitle("Point Shop");
